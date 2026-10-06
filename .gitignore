@@ -1,0 +1,6 @@
+.env
+node_modules/
+data/records.json
+data/results.jsonl
+data/progress.json
+data/summary.json

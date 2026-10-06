@@ -1,0 +1,16 @@
+{
+  "name": "email-verifier",
+  "version": "1.0.0",
+  "description": "Internal Node.js automation client for authorized record processing",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test tests/*.test.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
