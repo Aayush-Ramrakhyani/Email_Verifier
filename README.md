@@ -2,7 +2,7 @@
 
 An internal automation tool for resolving masked/obfuscated email addresses and verifying deliverability at scale — built to replace manual contact data cleanup for corporate research workflows.
 
-Built for **Technowire Data Science** as part of a freelance contract (Apr 2026 – Sep 2026).
+Built for **Technowire Data Science** as part of a freelance contract (Sep 2026).
 
 ---
 
