@@ -1,3 +1,9 @@
+/*
+ * verificationService.test.js
+ * Unit tests for VerificationService in mock mode — checks incompatibility detection,
+ * guess extraction from compatible candidates, and mock record retrieval.
+ */
+
 'use strict';
 
 const { test } = require('node:test');

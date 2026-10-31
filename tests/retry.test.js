@@ -1,3 +1,9 @@
+/*
+ * retry.test.js
+ * Unit tests for the withRetry utility — covers success path, exponential backoff
+ * on RetryableError, maxRetries exhaustion, and the no-retry guarantee for SessionExpiredError.
+ */
+
 'use strict';
 
 const { test } = require('node:test');

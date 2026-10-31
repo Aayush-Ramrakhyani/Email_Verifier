@@ -1,3 +1,9 @@
+/*
+ * ResultStore.js
+ * Writes every verification attempt to tried.jsonl (for duplicate-prevention on
+ * resume) and writes only successful verifications to results.jsonl for final output.
+ */
+
 'use strict';
 
 const fs   = require('fs');
@@ -28,7 +34,7 @@ class ResultStore {
       status:    verifyResult.status,
       timestamp: ts,
     });
-    fs.appendFileSync(TRIED_FILE, triedLine + '\n', 'utf8');
+    fs.appendFileSync(TRIED_FILE, triedLine + '\n', 'utf8'); // JSONL format: one JSON object per line, safe for concurrent appends
 
     // Only write successes to results.jsonl
     if (verifyResult.success) {
@@ -43,7 +49,7 @@ class ResultStore {
         message:         verifyResult.message,
         timestamp:       ts,
       });
-      fs.appendFileSync(RESULTS_FILE, resultLine + '\n', 'utf8');
+      fs.appendFileSync(RESULTS_FILE, resultLine + '\n', 'utf8'); // JSONL: append-only so partial runs don't lose earlier successes
     }
   }
 
@@ -62,7 +68,7 @@ class ResultStore {
       try {
         const r = JSON.parse(trimmed);
         if (r.rowId != null && r.candidate) {
-          keys.add(`${r.rowId}:${r.candidate.toLowerCase()}`);
+          keys.add(`${r.rowId}:${r.candidate.toLowerCase()}`); // key format: "rowId:candidate" — same format used in processedKeys Set in index.js
         }
       } catch { /* skip malformed lines */ }
     }

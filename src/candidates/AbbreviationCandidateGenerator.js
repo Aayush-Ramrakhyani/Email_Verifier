@@ -1,3 +1,9 @@
+/*
+ * AbbreviationCandidateGenerator.js
+ * Generates email candidates using name-truncation abbreviation patterns
+ * (e.g. first[k]+last[l] combos) and filters them against the masked email pattern.
+ */
+
 'use strict';
 
 const { parseMaskedPattern, isCompatible, extractGuess, isValidGuess } = require('./CandidateMatcher');
@@ -33,18 +39,18 @@ function generate(contactName, maskedEmail) {
 
   const locals = new Set();
 
-  // first[k] + sep + last[l]
+  // first[k] + sep + last[l] — cap at 6 chars each to avoid combinatorial explosion (6×6×3 = 108 per direction)
   for (let k = 1; k <= Math.min(first.length, 6); k++) {
     for (let l = 1; l <= Math.min(last.length, 6); l++) {
       const f  = first.slice(0, k);
       const la = last.slice(0, l);
       locals.add(f + la);
-      locals.add(f + '.' + la);
-      locals.add(f + '_' + la);
+      locals.add(f + '.' + la); // dot-separated variant (e.g. "a.ram")
+      locals.add(f + '_' + la); // underscore-separated variant
     }
   }
 
-  // last[k] + sep + first[l]
+  // last[k] + sep + first[l] — reversed order for cultures where surname comes first
   for (let k = 1; k <= Math.min(last.length, 6); k++) {
     for (let l = 1; l <= Math.min(first.length, 6); l++) {
       const la = last.slice(0, k);
@@ -77,11 +83,11 @@ function generate(contactName, maskedEmail) {
     if (!isCompatible(maskedEmail, candidate)) continue;
 
     const guess = extractGuess(maskedEmail, candidate);
-    if (!guess || !isValidGuess(guess)) continue;
+    if (!guess || !isValidGuess(guess)) continue; // server enforces exactly-2-char guesses — discard anything else
 
-    if ((candidate.match(/@/g) || []).length !== 1) continue;
+    if ((candidate.match(/@/g) || []).length !== 1) continue; // guard against double-@ if domain contains @
 
-    results.push({ candidate, source: 'ABBR', priority: 2 });
+    results.push({ candidate, source: 'ABBR', priority: 2 }); // priority 2: runs after NAME (1) but before DICT/EXPLICIT and BRUTE
   }
 
   return results;

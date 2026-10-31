@@ -1,3 +1,9 @@
+/*
+ * logger.js
+ * Lightweight console logger that prefixes every message with an HH:MM:SS timestamp;
+ * DEBUG-level output is gated behind the DEBUG=true environment variable.
+ */
+
 'use strict';
 
 function timestamp() {

@@ -1,3 +1,9 @@
+/*
+ * ProgressStore.js
+ * Persists pipeline counters (verified, errors, candidate counts, etc.) to
+ * data/progress.json so a run can report accurate stats and support future resume.
+ */
+
 'use strict';
 
 const fs   = require('fs');
@@ -28,9 +34,9 @@ class ProgressStore {
 
   _load() {
     try {
-      return { ...DEFAULTS, ...JSON.parse(fs.readFileSync(PROGRESS_FILE, 'utf8')) };
+      return { ...DEFAULTS, ...JSON.parse(fs.readFileSync(PROGRESS_FILE, 'utf8')) }; // spread DEFAULTS first so any new fields are present even in old files
     } catch {
-      return { ...DEFAULTS, startedAt: new Date().toISOString() };
+      return { ...DEFAULTS, startedAt: new Date().toISOString() }; // first run or corrupt file — start fresh
     }
   }
 

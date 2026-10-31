@@ -1,3 +1,9 @@
+/*
+ * candidateMatcher.test.js
+ * Unit tests for CandidateMatcher — validates pattern parsing, prefix/suffix
+ * compatibility checks, guess extraction, and the real-world 2-char guess format.
+ */
+
 'use strict';
 
 const { test } = require('node:test');

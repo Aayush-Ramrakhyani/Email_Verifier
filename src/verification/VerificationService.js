@@ -1,9 +1,14 @@
+/*
+ * VerificationService.js
+ * Sends candidate emails to POST /api/validate, interprets the response (success,
+ * session expiry, rate-limit, parse errors), and exposes a mock mode for tests.
+ */
+
 'use strict';
 
 const http  = require('http');
 const https = require('https');
 const config = require('../config/config');
-const logger = require('../utils/logger');
 const { RetryableError, SessionExpiredError } = require('../utils/retry');
 const { isCompatible, extractGuess } = require('../candidates/CandidateMatcher');
 const { getCookie } = require('../utils/cookieJar');
@@ -41,7 +46,7 @@ function postJson(url, body, timeoutMs = 30_000) {
     const lib    = parsed.protocol === 'https:' ? https : http;
     const bodyStr = JSON.stringify(body);
 
-    const cookie = getCookie();
+    const cookie = getCookie(); // session cookie captured from the initial GET /api/records response
     const options = {
       hostname: parsed.hostname,
       port:     parsed.port || (parsed.protocol === 'https:' ? 443 : 80),
@@ -49,11 +54,11 @@ function postJson(url, body, timeoutMs = 30_000) {
       method:   'POST',
       headers: {
         'Content-Type':   'application/json',
-        'Content-Length': Buffer.byteLength(bodyStr),
+        'Content-Length': Buffer.byteLength(bodyStr), // required by the server; must match the actual body byte length
         'Accept':         '*/*',
         'Connection':     'keep-alive',
-        'Origin':         `${parsed.protocol}//${parsed.host}`,
-        ...(cookie ? { 'Cookie': cookie } : {}),
+        'Origin':         `${parsed.protocol}//${parsed.host}`, // mirrors browser behaviour — some servers enforce same-origin check
+        ...(cookie ? { 'Cookie': cookie } : {}), // omit Cookie header entirely if no session cookie exists yet
       },
     };
 
@@ -117,12 +122,8 @@ class VerificationService {
     const url = `${this.baseUrl}${VALIDATE_ENDPOINT}`;
     const payload = { id: record.rowId, guess };
 
-    let httpResult;
-    try {
-      httpResult = await postJson(url, payload);
-    } catch (err) {
-      throw err; // network error — retry.withRetry handles it
-    }
+    // Network errors propagate directly — withRetry in index.js handles them
+    const httpResult = await postJson(url, payload);
 
     const { statusCode, body } = httpResult;
 

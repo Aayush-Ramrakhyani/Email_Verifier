@@ -1,3 +1,9 @@
+/*
+ * VerificationQueue.js
+ * Concurrency-limited async queue that caps simultaneous verification requests
+ * to maxConcurrent, draining queued tasks as running slots become free.
+ */
+
 'use strict';
 
 const config = require('../config/config');

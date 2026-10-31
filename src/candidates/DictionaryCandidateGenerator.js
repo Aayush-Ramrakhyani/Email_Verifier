@@ -1,3 +1,9 @@
+/*
+ * DictionaryCandidateGenerator.js
+ * Generates email candidates from a static role/keyword dictionary (config/dictionary.json)
+ * and filters them by compatibility with the masked email pattern.
+ */
+
 'use strict';
 
 const fs   = require('fs');
@@ -12,7 +18,7 @@ function loadDictionary() {
     const list = JSON.parse(raw);
     if (!Array.isArray(list)) return [];
     // Deduplicate and normalize
-    return [...new Set(list.map(w => String(w).toLowerCase().trim()).filter(Boolean))];
+    return [...new Set(list.map(w => String(w).toLowerCase().trim()).filter(Boolean))]; // deduplicate and normalise on load to avoid redundant API calls
   } catch {
     return [];
   }
@@ -38,7 +44,7 @@ function generate(maskedEmail) {
 
     if (isCompatible(maskedEmail, candidate)) {
       const guess = extractGuess(maskedEmail, candidate);
-      if (isValidGuess(guess)) {
+      if (isValidGuess(guess)) { // only include if the extracted guess satisfies the server's 2-char rule
         results.push({ candidate, source: 'DICTIONARY', priority: 2 });
       }
     }

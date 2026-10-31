@@ -1,3 +1,9 @@
+/*
+ * NameCandidateGenerator.js
+ * Generates 2-character guess candidates derived from a contact's name parts
+ * (initials, prefix-continuation, separators) and reconstructs full email candidates.
+ */
+
 'use strict';
 
 const { parseMaskedPattern, isValidGuess } = require('./CandidateMatcher');
@@ -35,7 +41,7 @@ function generate(contactName, maskedEmail) {
 
   const guessSet = new Set();
 
-  const add = (g) => { if (isValidGuess(g)) guessSet.add(g.toLowerCase()); };
+  const add = (g) => { if (isValidGuess(g)) guessSet.add(g.toLowerCase()); }; // silently discard any guess that doesn't pass the server's 2-char rule
 
   // ── From first name ──────────────────────────────────────────────────────
   // If first name starts with the known prefix, take the next 2 chars
@@ -95,8 +101,8 @@ function generate(contactName, maskedEmail) {
     if (seen.has(candidate)) continue;
     seen.add(candidate);
     // Quick sanity: must have exactly one @
-    if ((candidate.match(/@/g) || []).length !== 1) continue;
-    results.push({ candidate, source: 'NAME', priority: 1 });
+    if ((candidate.match(/@/g) || []).length !== 1) continue; // skip reconstruction that produced an invalid email (e.g. guess contained @)
+    results.push({ candidate, source: 'NAME', priority: 1 }); // priority 1: highest confidence — tried first in the pipeline
   }
 
   return results;

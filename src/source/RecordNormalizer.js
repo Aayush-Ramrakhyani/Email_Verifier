@@ -1,3 +1,9 @@
+/*
+ * RecordNormalizer.js
+ * Maps raw API records from GET /api/records into the canonical internal structure
+ * used throughout the pipeline, leaving verification fields as null until resolved.
+ */
+
 'use strict';
 
 /**

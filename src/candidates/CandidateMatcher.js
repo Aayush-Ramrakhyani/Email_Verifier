@@ -1,3 +1,9 @@
+/*
+ * CandidateMatcher.js
+ * Core pattern-matching utilities for masked email addresses: parses the ** gap,
+ * checks candidate compatibility, extracts the guess string, and validates guess format.
+ */
+
 'use strict';
 
 /**
@@ -69,7 +75,7 @@ function extractGuess(maskedEmail, candidate) {
  * Server rule: "Guess must be exactly 2 alphanumeric characters or have . / _ / @"
  * Interpreted as: exactly 2 characters, each alphanumeric or one of [. / _ @]
  */
-const VALID_GUESS_RE = /^[a-z0-9./_@]{2}$/i;
+const VALID_GUESS_RE = /^[a-z0-9./_@]{2}$/i; // exactly 2 chars, each alphanumeric or one of [. / _ @] — mirrors server validation rule
 
 function isValidGuess(guess) {
   return typeof guess === 'string' && VALID_GUESS_RE.test(guess);

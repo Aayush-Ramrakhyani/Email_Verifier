@@ -1,3 +1,9 @@
+/*
+ * recordNormalizer.test.js
+ * Unit tests for RecordNormalizer — verifies field mapping, immutability of the
+ * raw record, array handling, and error throwing on invalid input.
+ */
+
 'use strict';
 
 const { test } = require('node:test');

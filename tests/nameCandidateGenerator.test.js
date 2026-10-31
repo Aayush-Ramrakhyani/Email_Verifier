@@ -1,3 +1,9 @@
+/*
+ * nameCandidateGenerator.test.js
+ * Unit tests for NameCandidateGenerator — verifies that generated candidates are
+ * pattern-compatible, have valid 2-char guesses, carry correct metadata, and are deduplicated.
+ */
+
 'use strict';
 
 const { test } = require('node:test');

@@ -1,3 +1,9 @@
+/*
+ * SourceClient.js
+ * HTTP client for the source application API; fetches the list of records from
+ * GET /api/records using Node's built-in http/https modules (no external dependencies).
+ */
+
 'use strict';
 
 const https = require('https');

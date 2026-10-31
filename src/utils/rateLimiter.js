@@ -1,3 +1,9 @@
+/*
+ * rateLimiter.js
+ * Per-worker token-bucket throttle: each worker holds an independent slot so
+ * workers never block each other while still honouring the configured REQUEST_DELAY_MS.
+ */
+
 'use strict';
 
 const config = require('../config/config');
@@ -13,9 +19,9 @@ function createThrottle() {
   return async function throttle() {
     const delayMs = config.requestDelayMs;
     const elapsed = Date.now() - lastRequestAt;
-    const wait    = delayMs - elapsed;
-    if (wait > 0) await new Promise(r => setTimeout(r, wait));
-    lastRequestAt = Date.now();
+    const wait    = delayMs - elapsed; // remaining time in the current interval
+    if (wait > 0) await new Promise(r => setTimeout(r, wait)); // only sleep if the interval hasn't elapsed yet
+    lastRequestAt = Date.now(); // stamp after the wait so the next call measures from the actual send time
   };
 }
 

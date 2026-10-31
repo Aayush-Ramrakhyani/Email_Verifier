@@ -1,3 +1,9 @@
+/*
+ * retry.js
+ * Exponential-backoff retry wrapper with two custom error classes: RetryableError
+ * (transient network/server faults) and SessionExpiredError (bypass retries, pause all workers).
+ */
+
 'use strict';
 
 const logger = require('./logger');
@@ -22,7 +28,7 @@ function isRetryable(err) {
   if (err instanceof SessionExpiredError) return false;
   if (err instanceof RetryableError) return true;
   // Network errors
-  const retryCodes = ['ECONNREFUSED', 'ECONNRESET', 'ETIMEDOUT', 'ENOTFOUND', 'EAI_AGAIN'];
+  const retryCodes = ['ECONNREFUSED', 'ECONNRESET', 'ETIMEDOUT', 'ENOTFOUND', 'EAI_AGAIN']; // transient Node.js network error codes worth retrying
   if (retryCodes.includes(err.code)) return true;
   if (err.message && err.message.includes('Timeout')) return true;
   return false;
@@ -40,7 +46,7 @@ async function withRetry(fn, { maxRetries = 3, baseDelayMs = 1000 } = {}) {
       attempt++;
       if (attempt > maxRetries) throw err;
 
-      const delay = baseDelayMs * Math.pow(2, attempt - 1);
+      const delay = baseDelayMs * Math.pow(2, attempt - 1); // exponential backoff: attempt 1→1×base, 2→2×base, 3→4×base
       logger.warn(`Retry ${attempt}/${maxRetries} in ${delay}ms — ${err.message}`);
       await new Promise(r => setTimeout(r, delay));
     }

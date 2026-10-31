@@ -1,3 +1,9 @@
+/*
+ * ExplicitCandidateGenerator.js
+ * Generates email candidates from a hand-curated list (config/candidates.json) and
+ * filters them by compatibility with the masked email pattern; highest-confidence stage.
+ */
+
 'use strict';
 
 const fs   = require('fs');
@@ -34,8 +40,8 @@ function generate(maskedEmail) {
 
     if (isCompatible(maskedEmail, candidate)) {
       const guess = extractGuess(maskedEmail, candidate);
-      if (isValidGuess(guess)) {
-        results.push({ candidate, source: 'EXPLICIT', priority: 3 });
+      if (isValidGuess(guess)) { // discard if the guess doesn't satisfy the server's 2-char format constraint
+        results.push({ candidate, source: 'EXPLICIT', priority: 3 }); // priority 3: tried after ABBR but before BRUTE
       }
     }
   }

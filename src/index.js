@@ -1,3 +1,10 @@
+/*
+ * index.js
+ * Main entry point for the email-verifier pipeline. Orchestrates four sequential
+ * candidate stages (NAME → ABBR → DICT/EXPLICIT → BRUTE) using concurrent async
+ * worker pools, a shared session-recovery mechanism, and incremental result storage.
+ */
+
 'use strict';
 
 require('dotenv').config();
@@ -33,7 +40,7 @@ const ALL_COMBOS = [];
 for (const c1 of CHARS) {
   for (const c2 of CHARS) {
     const g = c1 + c2;
-    if (isValidGuess(g)) ALL_COMBOS.push(g);
+    if (isValidGuess(g)) ALL_COMBOS.push(g); // pre-filter: skip combos the server would reject
   }
 }
 
@@ -51,12 +58,12 @@ class AsyncQueue {
 
   push(item) {
     this._items.push(item);
-    if (this._waiters.length > 0) this._waiters.shift()();
+    if (this._waiters.length > 0) this._waiters.shift()(); // wake one blocked consumer now that an item is available
   }
 
   close() {
     this._done = true;
-    while (this._waiters.length > 0) this._waiters.shift()();
+    while (this._waiters.length > 0) this._waiters.shift()(); // unblock all consumers so they observe _done=true and exit
   }
 
   async next() {
@@ -84,7 +91,7 @@ class AsyncQueue {
 
 async function runWorkers(queue, count, taskFn) {
   const slots = Array.from({ length: count }, async () => {
-    const throttle = createThrottle();
+    const throttle = createThrottle(); // each worker gets an independent slot so they don't serialize on the same delay
     for await (const item of queue) await taskFn(item, throttle);
   });
   await Promise.all(slots);
@@ -103,10 +110,10 @@ async function waitForSessionRecovery() {
       remaining--;
       process.stdout.write(`\r  Session recovering — resuming in ${remaining}s... `);
     }, 1000);
-    _sessionRecovery = new Promise(r => setTimeout(r, 60_000)).then(() => {
+    _sessionRecovery = new Promise(r => setTimeout(r, 60_000)).then(() => { // 60 s cooldown lets the server reset its session state
       clearInterval(tick);
       process.stdout.write('\r                                               \r');
-      _sessionRecovery = null;
+      _sessionRecovery = null; // clear so the next expiry triggers a fresh recovery
       logger.info('Session recovered — all workers resuming');
     });
   }
@@ -131,7 +138,7 @@ async function sendCandidate(record, candidateObj, activeSet, svc, resultStore, 
   try {
     result = await withRetry(
       () => svc.verifyRecord(record, candidateObj.candidate),
-      { maxRetries: config.maxRetries, baseDelayMs: 1000 }
+      { maxRetries: config.maxRetries, baseDelayMs: 1000 } // exponential backoff: 1 s, 2 s, 4 s
     );
   } catch (err) {
     if (err instanceof SessionExpiredError) {
@@ -223,7 +230,7 @@ async function main() {
     rawRecords = svc.getMockRecords();
   } else {
     rawRecords = await client.getRecords();
-    fs.writeFileSync(RECORDS_FILE, JSON.stringify(rawRecords, null, 2), 'utf8');
+    fs.writeFileSync(RECORDS_FILE, JSON.stringify(rawRecords, null, 2), 'utf8'); // snapshot raw API response for debugging / offline replay
   }
 
   if (rawRecords.length === 0) {
@@ -246,7 +253,7 @@ async function main() {
   nameQ.close();
 
   // Periodic status log every 15 seconds
-  const statusTimer = setInterval(() => {
+  const statusTimer = setInterval(() => { // fires every 15 s to give a live throughput snapshot without spamming the console
     logger.info(
       `Progress — verified: ${progress.data.verified}/${records.length} | ` +
       `nameQ: ${nameQ.size} abbrQ: ${abbrQ.size} dictQ: ${dictQ.size} bruteQ: ${bruteQ.size}`
